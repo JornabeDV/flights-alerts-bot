@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model FlightPrice {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  price     Int
+  createdAt DateTime @default(now())
+}
+
+model PriceAlert {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  oldPrice  Int
+  newPrice  Int
+  createdAt DateTime @default(now())
+}
