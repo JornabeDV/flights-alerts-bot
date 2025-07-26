@@ -19,8 +19,8 @@ export async function checkPrices() {
     for (const day of dayPrices) {
       const date = day.date;
       const price = day.price;
-      const previousPrice = lastPrices[date];
-
+      const previousPrice = price + 50
+      
       if (previousPrice !== undefined && previousPrice !== price) {
         alertsGenerated++;
         messages.push(`🛫 Price change detected for EZE → BCN\n📅 Date: ${date}\n💰 Old Price: $${previousPrice}\n💸 New Price: $${price}`);
