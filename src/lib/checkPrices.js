@@ -32,7 +32,7 @@ export async function checkPrices() {
           const date = day.date;
           const price = day.price;
 
-          if (price < PRICE_THRESHOLD) {
+          if (typeof price === 'number' && price < PRICE_THRESHOLD) {
             alertsGenerated++;
             messages.push(
               `🛫 Precio bajo detectado para ${origin} → ${destination}\n📅 Fecha: ${date}\n💰 Precio: $${price} (umbral: $${PRICE_THRESHOLD})`
@@ -46,7 +46,7 @@ export async function checkPrices() {
   }
 
   if (alertsGenerated > 0 && messages.length > 0) {
-    const text = messages.slice(0, 3).join('\n\n'); // máximo 3 alertas por mensaje
+    const text = messages.slice(0, 3).join('\n\n');
     await bot.sendMessage(chatId, text);
   }
 
