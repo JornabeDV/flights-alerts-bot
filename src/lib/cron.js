@@ -5,7 +5,7 @@ function startCron() {
 
   setInterval(() => {
     checkPrices();
-  }, 30 * 60 * 1000); // 30 minutos
+  }, 30 * 60 * 1000);
 }
 
 startCron();
