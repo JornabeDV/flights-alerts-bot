@@ -1,13 +1,11 @@
-import checkPrices from '../routes/api/check/+server';
+import { checkPrices } from './checkPrices.js';
 
 function startCron() {
-  // Ejecutar cada 30 minutos (1800000 ms)
+  checkPrices();
+
   setInterval(() => {
     checkPrices();
-  }, 30 * 60 * 1000);
-
-  // Opcional: ejecutar al arrancar también
-  checkPrices();
+  }, 30 * 60 * 1000); // 30 minutos
 }
 
 startCron();
