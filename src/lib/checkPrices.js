@@ -1,44 +1,56 @@
 import TelegramBot from 'node-telegram-bot-api';
 
-const API_URL = 'https://www.flylevel.com/nwe/flights/api/calendar/?triptype=RT&origin=EZE&destination=BCN&month=07&year=2025&currencyCode=USD';
+const ORIGINS = ['EZE', 'BCN'];
+const DESTINATIONS = ['BCN', 'EZE'];
+const YEAR = 2025;
+const CURRENCY = 'USD';
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
 const chatId = process.env.TELEGRAM_CHAT_ID;
 
-const lastPrices = {};
+const PRICE_THRESHOLD = 600;
 
 export async function checkPrices() {
-  try {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    const dayPrices = data?.data?.dayPrices ?? [];
+  let alertsGenerated = 0;
+  let messages = [];
 
-    let alertsGenerated = 0;
-    let messages = [];
+  for (let month = 1; month <= 12; month++) {
+    const monthStr = month.toString().padStart(2, '0');
 
-    for (const day of dayPrices) {
-      const date = day.date;
-      const price = day.price;
-      const previousPrice = price + 50
-      
-      if (previousPrice !== undefined && previousPrice !== price) {
-        alertsGenerated++;
-        messages.push(`🛫 Price change detected for EZE → BCN\n📅 Date: ${date}\n💰 Old Price: $${previousPrice}\n💸 New Price: $${price}`);
+    for (let i = 0; i < ORIGINS.length; i++) {
+      const origin = ORIGINS[i];
+      const destination = DESTINATIONS[i];
+
+      const API_URL = `https://www.flylevel.com/nwe/flights/api/calendar/?triptype=RT&origin=${origin}&destination=${destination}&month=${monthStr}&year=${YEAR}&currencyCode=${CURRENCY}`;
+
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const dayPrices = data?.data?.dayPrices ?? [];
+
+        for (const day of dayPrices) {
+          const date = day.date;
+          const price = day.price;
+
+          if (price < PRICE_THRESHOLD) {
+            alertsGenerated++;
+            messages.push(
+              `🛫 Precio bajo detectado para ${origin} → ${destination}\n📅 Fecha: ${date}\n💰 Precio: $${price} (umbral: $${PRICE_THRESHOLD})`
+            );
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching prices for ${origin} → ${destination} mes ${monthStr}:`, error);
       }
-
-      lastPrices[date] = price;
     }
-
-    if (alertsGenerated > 0 && messages.length > 0) {
-      const text = messages.slice(0, 3).join('\n\n');
-      await bot.sendMessage(chatId, text);
-    }
-
-    console.log('Check done. Alerts sent:', alertsGenerated);
-
-    return { alertsGenerated };
-  } catch (err) {
-    console.error('Error checking prices:', err);
-    return { error: err.message };
   }
+
+  if (alertsGenerated > 0 && messages.length > 0) {
+    const text = messages.slice(0, 3).join('\n\n'); // máximo 3 alertas por mensaje
+    await bot.sendMessage(chatId, text);
+  }
+
+  console.log('Check done. Alerts sent:', alertsGenerated);
+
+  return { alertsGenerated };
 }
